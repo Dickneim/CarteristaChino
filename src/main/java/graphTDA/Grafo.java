@@ -1,9 +1,15 @@
+// Clase Grafo
+
 package graphTDA;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.PriorityQueue;
 
 /**
  *
@@ -18,9 +24,21 @@ public class Grafo {
         aristas = new ArrayList<>();
     }
     
+    public Grafo(List<Vertice> vertices, List<Arista> aristas) {
+        this.vertices = new ArrayList<>();
+        for (Vertice v : vertices) {
+            this.vertices.add(new Vertice(v.getId()));
+        }
+
+        this.aristas = new ArrayList<>();
+        for (Arista a : aristas) {
+            this.aristas.add(new Arista(a.getOrigen(), a.getDestino(), a.getPeso()));
+        }
+    }
+    
     public boolean esUnidireccional() {
         for (Arista a : aristas) {
-            Arista inversa = new Arista(a.getDestino(), a.getOrigen());
+            Arista inversa = new Arista(a.getDestino(), a.getOrigen(), a.getPeso());
             if (aristas.contains(inversa)) {
                 return false; // Hay al menos una arista opuesta: no es unidireccional
             }
@@ -32,10 +50,16 @@ public class Grafo {
         vertices.add(new Vertice(id));
     }
 
-    public void agregarArista(int origen, int destino) {
-        Arista arista = new Arista(origen, destino);
-        aristas.add(arista);
+    public void agregarArista(int origen, int destino, int peso) {
+        aristas.add(new Arista(origen, destino, peso));
     }
+
+    
+    public void agregarAristaNoDirigida(int origen, int destino, int peso) {
+        agregarArista(origen, destino, peso);
+        agregarArista(destino, origen, peso);
+    }
+
 
     public boolean borrarVertice(int id) {
         Vertice aRemover = null;
@@ -54,9 +78,13 @@ public class Grafo {
     }
 
     public boolean borrarArista(int origen, int destino) {
-        return aristas.removeIf(a -> (a.getOrigen() == origen && a.getDestino() == destino) || 
-                                     (a.getOrigen() == destino && a.getDestino() == origen));
+        // Elimina ambas direcciones: (origen → destino) y (destino → origen)
+        return aristas.removeIf(a ->
+            (a.getOrigen() == origen && a.getDestino() == destino) ||
+            (a.getOrigen() == destino && a.getDestino() == origen)
+        );
     }
+
 
     public List<Arista> getAristas() {
         return aristas;
@@ -81,9 +109,9 @@ public class Grafo {
             copia.agregarVertice(v.getId());
         }
         for (Arista a : this.aristas) {
-            copia.agregarArista(a.getOrigen(), a.getDestino());
+            copia.agregarArista(a.getOrigen(), a.getDestino(),a.getPeso());
         }
-    return copia;
+        return copia;
     }
     
     public boolean vacio() {
@@ -119,6 +147,8 @@ public class Grafo {
         }
     }
     
+    
+    
     // Este método te permite obtener todas las aristas conectadas a un vértice
     public List<Arista> obtenerAristasDesde(int v) {
         List<Arista> adyacentes = new ArrayList<>();
@@ -128,6 +158,102 @@ public class Grafo {
             }
         }
         return adyacentes;
+    }
+
+    
+    // Calculamos el grado de un vertice en el grado
+    public int grado(int idVertice) {
+        int grado = 0;
+        for (Arista a : aristas) {
+            if (a.getOrigen() == idVertice || a.getDestino() == idVertice) {
+                grado++;
+            }
+        }
+        return grado;
+    }
+    
+    public Map<Integer, Integer> dijkstra(int origen) {
+        Map<Integer, Integer> distancias = new HashMap<>();
+        for (Vertice v : vertices) {
+            distancias.put(v.getId(), Integer.MAX_VALUE);
+        }
+        distancias.put(origen, 0);
+
+        PriorityQueue<Arista> cola = new PriorityQueue<>(Comparator.comparingInt(Arista::getPeso));
+        Set<Integer> visitados = new HashSet<>();
+
+        // Agregar todas las aristas desde el origen
+        for (Arista a : obtenerAristasDesde(origen)) {
+            cola.add(new Arista(origen, a.getDestino(), a.getPeso()));
+        }
+
+        visitados.add(origen);
+
+        while (!cola.isEmpty()) {
+            Arista actual = cola.poll();
+            int destino = actual.getDestino();
+            int peso = actual.getPeso();
+
+            if (!visitados.contains(destino)) {
+                int nuevaDistancia = distancias.get(actual.getOrigen()) + peso;
+                if (nuevaDistancia < distancias.get(destino)) {
+                    distancias.put(destino, nuevaDistancia);
+                    for (Arista siguiente : obtenerAristasDesde(destino)) {
+                        if (!visitados.contains(siguiente.getDestino())) {
+                            cola.add(new Arista(destino, siguiente.getDestino(), siguiente.getPeso()));
+                        }
+                    }
+                }
+                visitados.add(destino);
+            }
+        }
+
+        return distancias;
+    }
+    
+    public Map<Integer, Integer> dijkstraConPredecesores(int origen, Map<Integer, Integer> predecesores) {
+        Map<Integer, Integer> distancias = new HashMap<>();
+        for (Vertice v : vertices) {
+            distancias.put(v.getId(), Integer.MAX_VALUE);
+        }
+        distancias.put(origen, 0);
+
+        PriorityQueue<int[]> cola = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+        cola.add(new int[]{origen, 0});
+        Set<Integer> visitados = new HashSet<>();
+
+        while (!cola.isEmpty()) {
+            int[] actual = cola.poll();
+            int nodo = actual[0];
+            int dist = actual[1];
+
+            if (!visitados.add(nodo)) continue; // evitar volver a visitar
+
+            for (Arista a : obtenerAristasDesde(nodo)) {
+                int vecino = (a.getOrigen() == nodo) ? a.getDestino() : a.getOrigen();
+                int nuevaDist = distancias.get(nodo) + a.getPeso();
+
+                if (nuevaDist < distancias.get(vecino)) {
+                    distancias.put(vecino, nuevaDist);
+                    predecesores.put(vecino, nodo); // asegura que vecino ≠ nodo
+                    cola.add(new int[]{vecino, nuevaDist});
+                }
+            }
+        }
+
+        return distancias;
+    }
+
+    
+    public Arista buscarAristaEntre(int origen, int destino) {
+        for (Arista a : aristas) {
+            // Como el grafo es no dirigido, se revisa en ambos sentidos
+            if ((a.getOrigen() == origen && a.getDestino() == destino) ||
+                (a.getOrigen() == destino && a.getDestino() == origen)) {
+                return a;
+            }
+        }
+        return null; // No se encontró una arista directa
     }
 }
     

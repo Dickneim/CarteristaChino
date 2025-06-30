@@ -1,7 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+// Clase Arista
+
 package graphTDA;
 
 /**
@@ -13,15 +11,19 @@ public class Arista {
     private int destino;
     private int peso=0;
 
-    public Arista(int origen, int destino) {
+    public Arista(int origen, int destino, int peso) {
         this.origen = origen;
         this.destino = destino;
+        setPeso(peso);  // Reutiliza la validacion existente
     }
     
-    public void setPeso(int peso){
-        this.peso=peso;
+    public void setPeso(int peso) {
+        if (peso < 0) {
+            throw new IllegalArgumentException("El peso no puede ser negativo.");
+        }
+        this.peso = peso;
     }
-    
+
     public int getPeso(){
         return peso;
     }
