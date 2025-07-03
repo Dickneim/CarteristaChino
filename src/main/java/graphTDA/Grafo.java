@@ -1,5 +1,4 @@
 // Clase Grafo
-
 package graphTDA;
 
 import java.util.ArrayList;
@@ -87,7 +86,7 @@ public class Grafo {
 
 
     public List<Arista> getAristas() {
-        return aristas;
+        return new ArrayList<>(aristas);
     }
     
     public List<Vertice> getVertice(){
@@ -135,6 +134,13 @@ public class Grafo {
         dfs(origen, visitados);
         return visitados.contains(destino);
     }
+    
+    public boolean esConexo(){
+        if (vertices.isEmpty()) return false;
+        Set<Integer> visitados = new HashSet<>();
+        dfs(vertices.get(0).getId(), visitados);
+        return visitados.size() == vertices.size();
+    }
 
     private void dfs(int actual, Set<Integer> visitados) {
         visitados.add(actual);
@@ -147,8 +153,6 @@ public class Grafo {
         }
     }
     
-    
-    
     // Este método te permite obtener todas las aristas conectadas a un vértice
     public List<Arista> obtenerAristasDesde(int v) {
         List<Arista> adyacentes = new ArrayList<>();
@@ -159,7 +163,6 @@ public class Grafo {
         }
         return adyacentes;
     }
-
     
     // Calculamos el grado de un vertice en el grado
     public int grado(int idVertice) {
@@ -244,7 +247,6 @@ public class Grafo {
         return distancias;
     }
 
-    
     public Arista buscarAristaEntre(int origen, int destino) {
         for (Arista a : aristas) {
             // Como el grafo es no dirigido, se revisa en ambos sentidos
@@ -255,6 +257,17 @@ public class Grafo {
         }
         return null; // No se encontró una arista directa
     }
+
+    public boolean esEuleriano() {
+        List<Vertice> verticesImpar = new ArrayList<>();
+        for (Vertice v : vertices) {
+            if (grado(v.getId()) % 2 != 0) {
+                verticesImpar.add(v);
+            }
+        }
+        return esConexo() && verticesImpar.isEmpty();
+    }
+    
 }
     
 

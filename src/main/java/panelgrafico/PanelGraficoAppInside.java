@@ -28,7 +28,7 @@ public class PanelGraficoAppInside extends JPanel {
 
     private void cargarFondoCiudad() {
         try {
-            fondoCiudad = new ImageIcon(getClass().getResource("src\\test\\java\\Fondo2.png")).getImage();
+            fondoCiudad = new ImageIcon("src\\test\\java\\Fondo1.png").getImage();
         } catch (Exception e) {
             System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
         }
