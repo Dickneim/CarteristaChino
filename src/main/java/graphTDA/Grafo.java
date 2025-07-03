@@ -38,13 +38,15 @@ public class Grafo {
     public boolean esUnidireccional() {
         for (Arista a : aristas) {
             Arista inversa = new Arista(a.getDestino(), a.getOrigen(), a.getPeso());
-            if (aristas.contains(inversa)) {
-                return false; // Hay al menos una arista opuesta: no es unidireccional
+            if (!aristas.contains(inversa)) {
+                System.out.println("No se encontró la inversa de: " + a.getOrigen() + " -> " + a.getDestino());
+                return true; // grafo es unidireccional
             }
         }
-        return true; // No se encontró ninguna arista opuesta
+        return false; // grafo es no dirigido
     }
 
+    
     public void agregarVertice(int id) {
         vertices.add(new Vertice(id));
     }
@@ -76,11 +78,17 @@ public class Grafo {
         return false;
     }
 
-    public boolean borrarArista(int origen, int destino) {
-        // Elimina ambas direcciones: (origen → destino) y (destino → origen)
+    public boolean borrarArista(Vertice origen, Vertice destino) {
         return aristas.removeIf(a ->
-            (a.getOrigen() == origen && a.getDestino() == destino) ||
-            (a.getOrigen() == destino && a.getDestino() == origen)
+            (a.getOrigen() == origen.getId() && a.getDestino() == destino.getId()) ||
+            (a.getOrigen() == destino.getId() && a.getDestino() == origen.getId())
+        );
+    }
+
+    // Dentro de la clase Grafo
+    public boolean borrarAristaDirigida(Arista arista) {
+        return aristas.removeIf(a -> 
+            a.getOrigen() == arista.getOrigen() && a.getDestino() == arista.getDestino()
         );
     }
 
@@ -117,15 +125,15 @@ public class Grafo {
         return aristas.isEmpty();
     }
     
-    public boolean esPuente(int origen, int destino) {
-        // Clona el grafo y elimina la arista
+    public boolean esPuente(Vertice origen, Vertice destino) {
+        // Clona el grafo y elimina la arista entre los vértices dados
         Grafo copia = this.clonar();
         copia.borrarArista(origen, destino);
 
-        // Verifica si origen y destino siguen conectados
-        return !copia.estanConectados(origen, destino);
+        // Verifica si ambos vértices siguen conectados
+        return !copia.estanConectados(origen.getId(), destino.getId());
     }
-    
+
     // búsqueda en profundidad (DFS) para verificar si hay un camino entre 
     // dos vértices en el grafo, es decir, si están en la misma componente conexa.
     
@@ -163,6 +171,7 @@ public class Grafo {
         }
         return adyacentes;
     }
+
     
     // Calculamos el grado de un vertice en el grado
     public int grado(int idVertice) {
@@ -249,13 +258,11 @@ public class Grafo {
 
     public Arista buscarAristaEntre(int origen, int destino) {
         for (Arista a : aristas) {
-            // Como el grafo es no dirigido, se revisa en ambos sentidos
-            if ((a.getOrigen() == origen && a.getDestino() == destino) ||
-                (a.getOrigen() == destino && a.getDestino() == origen)) {
+            if (a.getOrigen() == origen && a.getDestino() == destino) {
                 return a;
             }
         }
-        return null; // No se encontró una arista directa
+        return null;
     }
 
     public boolean esEuleriano() {
