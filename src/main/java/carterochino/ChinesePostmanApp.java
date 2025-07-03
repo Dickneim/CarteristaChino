@@ -3,507 +3,86 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package carterochino;
+
 import graphTDA.*;
 import panelgrafico.*;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Point;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 /**
  *
- * @author USER
+ * @author Jorge
  */
 public class ChinesePostmanApp extends javax.swing.JPanel {
     private Grafo grafo;
-    private int idVertice = 1;
-    private boolean modoInsertarVertice = false;
-    private boolean modoInsertarArista = false;
-    private Vertice verticeSeleccionado1 = null;
-    private Vertice verticeSeleccionado2 = null;
     private Map<Integer, Point> posicionesVertices;
     private PanelGrafico panelGrafico;
-    private PanelGraficoFondo panelGraficoAp;
-    private PanelGraficoAppInside panelGrafico2;
+    private PanelGraficoFondo panelGraficoFondo;
+    private JPanel panelContenedor;
+    private int idVertice = 1;
+    private Vertice verticeSeleccionado = null;
+    private boolean modoConectar = false;
+    
+    public ChinesePostmanApp(Grafo grafo) {
+        initComponents();  
+        this.grafo = (grafo != null) ? grafo : new Grafo();
+        this.posicionesVertices = new HashMap<>();
+        initGUI();
+    }
+    
     /**
-     * Creates new form ChinesePostmanApp
-     */
-    public ChinesePostmanApp() {
-        initComponents();
-        grafo = new Grafo();
-        posicionesVertices = new HashMap<>();
-        
-        panelGrafico = new PanelGrafico(grafo, posicionesVertices);
-        jPanel4.setLayout(new BorderLayout());
-        jPanel4.add(panelGrafico, BorderLayout.CENTER);
-        
-        // Specify the path to your background image
-        String imagePath = "src\\test\\java\\Fondo1.png";
-        panelGraficoAp = new PanelGraficoFondo(grafo, posicionesVertices, imagePath);
-        jPanel1.setLayout(new BorderLayout());
-        jPanel1.add(panelGraficoAp, BorderLayout.CENTER);
-        
-        panelGrafico2 = new PanelGraficoAppInside(grafo, posicionesVertices);
-        jPanel2.setLayout(new BorderLayout());
-        jPanel2.add(panelGrafico2, BorderLayout.CENTER);
-        
-        jPanel1.setVisible(false);
-        jPanel3.setVisible(true);
-        
-        pack();
-    }
-    
-    private void BorrarVerticeActionPerformed(java.awt.event.ActionEvent evt) {                                              
-        Info.setText("Haga clic en un vértice para eliminarlo.");
-        
-        jPanel4.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                Vertice verticeCercano = obtenerVerticeCercano(evt.getX(), evt.getY());
-                if (verticeCercano != null) {
-                    int id = verticeCercano.getId();
-                    if (grafo.borrarVertice(id)) {
-                        posicionesVertices.remove(id); // Elimina la posición del vértice
-                        panelGrafico.repaint();
-                        panelGrafico2.repaint();
-                        Info.setText("Vértice " + id + " borrado con éxito.");
-                    } else {
-                        Info.setText("No se pudo borrar el vértice " + id + ".");
-                    }
-                } else {
-                    Info.setText("No se encontró ningún vértice cerca del clic.");
-                }
-                // Elimina el listener para evitar conflictos
-                jPanel4.removeMouseListener(this);
-            }
-        });
-       
-    }                                             
-
-    private void BorrarAristaActionPerformed(java.awt.event.ActionEvent evt) {                                             
-        // TODO add your handling code here:
-         String input = JOptionPane.showInputDialog(this, "Ingrese los IDs de los vértices de la arista a borrar (separados por coma):");
-        try {
-            String[] ids = input.split(",");
-            int id1 = Integer.parseInt(ids[0].trim());
-            int id2 = Integer.parseInt(ids[1].trim());
-            if (grafo.borrarArista(id1, id2)) {
-                actualizarGrafico();
-                Info.setText("Arista entre " + id1 + " y " + id2 + " borrada con éxito.");
-            } else {
-                Info.setText("No se pudo borrar la arista entre " + id1 + " y " + id2 + ".");
-            }
-        } catch (Exception e) {
-            Info.setText("Entrada inválida. Use el formato: id1, id2");
-        }
-    }                                            
-
-    private void Salir2ActionPerformed(java.awt.event.ActionEvent evt) {                                       
-        // TODO add your handling code here:
-        System.exit(0);
-    }                                      
-
-    private void ShowAplicativoActionPerformed(java.awt.event.ActionEvent evt) {                                               
-        // TODO add your handling code here:
-        jPanel3.setVisible(false); // Oculta jPanel3
-        jPanel1.setVisible(true);  // Muestra jPanel1
-        
-    }                                              
-
-    private void ShowTeoriaActionPerformed(java.awt.event.ActionEvent evt) {                                           
-        // TODO add your handling code here:
-        jPanel1.setVisible(false); // Oculta jPanel1
-        jPanel3.setVisible(true);  // Muestra jPanel3
-    }                                          
-
-    private void SalirActionPerformed(java.awt.event.ActionEvent evt) {                                      
-        // TODO add your handling code here:
-        System.exit(0);
-    }                                     
-
-    private void jPanel4MouseClicked(java.awt.event.MouseEvent evt) {                                     
-        // TODO add your handling code here:
-        if (modoInsertarVertice) {
-            agregarVerticeGraficamente(evt.getX(), evt.getY());
-            modoInsertarVertice = false;
-        } else if (modoInsertarArista) {
-            Vertice v = obtenerVerticeCercano(evt.getX(), evt.getY());
-            if (v != null) {
-                if (verticeSeleccionado1 == null) {
-                    verticeSeleccionado1 = v;
-                    Info.setText("Seleccione el segundo vértice para la arista.");
-                } else {
-                    verticeSeleccionado2 = v;
-                    if (verticeSeleccionado1.getId() == verticeSeleccionado2.getId()) {
-                        Info.setText("No puedes agregar una arista entre un vértice y él mismo. Intente de nuevo");
-                        verticeSeleccionado1 = null;
-                        verticeSeleccionado2 = null;
-                        return; // Detener aquí, no agregar la arista
-                    }
-                    String pesoStr = JOptionPane.showInputDialog(this, "Ingrese el peso de la arista:");
-                    try {
-                        int peso = Integer.parseInt(pesoStr);
-                        grafo.agregarArista(verticeSeleccionado1.getId(), verticeSeleccionado2.getId(), peso);
-                        actualizarGrafico();
-                        Info.setText("Arista agregada con éxito.");
-                    } catch (NumberFormatException e) {
-                        Info.setText("Por favor, ingrese un número válido para el peso.");
-                    }
-                    verticeSeleccionado1 = null;
-                    verticeSeleccionado2 = null;
-                    modoInsertarArista = false;
-                }
-            }
-        }
-        
-    }                                    
-
-    private void InsertarAristaActionPerformed(java.awt.event.ActionEvent evt) {                                               
-        if (posicionesVertices.isEmpty()) {
-            Info.setText("No hay suficientes vértices para crear una arista.");
-            return;
-        }
-
-        if (posicionesVertices.size() < 2) {
-            Info.setText("Debe haber al menos 2 vértices para crear una arista.");
-            return;
-        }
-           
-        modoInsertarArista = true; // Define un modo para insertar aristas
-        Info.setText("Seleccione el primer vértice para la arista.");
-        jPanel4.repaint();
-        jPanel2.repaint();
-        
-        
-    }                                              
-
-    private void InsertarVerticeActionPerformed(java.awt.event.ActionEvent evt) {                                                
-
-        modoInsertarVertice = true;
-        Info.setText("Haga clic en el panel para insertar un vértice.");
-
-    }                                               
-
-    private void KruskalActionPerformed(java.awt.event.ActionEvent evt) {                                        
-        // TODO add your handling code here:
-        List<Arista> arbolExpansionMinima = grafo.kruskal();
-        if (arbolExpansionMinima.isEmpty()) {
-            Info.setText("No se pudo generar el árbol de expansión mínima.");
-        } else {
-            actualizarGrafico(arbolExpansionMinima);
-            Info.setText("Árbol de expansión mínima generado con éxito. \nEl costo minimo es: "+grafo.sumPeso);
-            costoMin.setText("S/."+grafo.sumPeso*12+" de Cable para instalar.");
-            grafo.sumPeso=0;
-        }
-    }                                       
-
-    private void ReiniciarActionPerformed(java.awt.event.ActionEvent evt) {                                          
-        grafo = new Grafo();
-        posicionesVertices.clear();
-        idVertice = 1;
-
-        panelGrafico.setAristasDestacadas(null);
-        panelGrafico2.setAristasDestacadas(null);
-  
-
-        // Create new instances of the panels with the reset graph
-        panelGrafico = new PanelGrafico(grafo, posicionesVertices);
-        panelGrafico2 = new PanelGraficoAppInside(grafo, posicionesVertices);
-
-
-        
-        // Remove old panels and add new ones
-        jPanel4.removeAll();
-        jPanel4.setLayout(new BorderLayout());
-        jPanel4.add(panelGrafico, BorderLayout.CENTER);
-        jPanel2.removeAll();
-        jPanel2.setLayout(new BorderLayout());
-        jPanel2.add(panelGrafico2, BorderLayout.CENTER);
- 
-
-        // Revalidate and repaint all panels
-        jPanel4.revalidate();
-        jPanel4.repaint();
-        jPanel2.revalidate();
-        jPanel2.repaint();
-  
-
-        Info.setText("Grafo reiniciado.");
-    }                                         
-
-    private void Reiniciar2ActionPerformed(java.awt.event.ActionEvent evt) {                                           
-             grafo = new Grafo();
-        posicionesVertices.clear();
-        idVertice = 1;
-
-        panelGrafico.setAristasDestacadas(null);
-        panelGrafico2.setAristasDestacadas(null);
-  
-
-        // Create new instances of the panels with the reset graph
-        panelGrafico = new PanelGrafico(grafo, posicionesVertices);
-        panelGrafico2 = new PanelGraficoAppInside(grafo, posicionesVertices);
-
-
-        
-        // Remove old panels and add new ones
-        jPanel4.removeAll();
-        jPanel4.setLayout(new BorderLayout());
-        jPanel4.add(panelGrafico, BorderLayout.CENTER);
-        jPanel2.removeAll();
-        jPanel2.setLayout(new BorderLayout());
-        jPanel2.add(panelGrafico2, BorderLayout.CENTER);
- 
-
-        // Revalidate and repaint all panels
-        jPanel4.revalidate();
-        jPanel4.repaint();
-        jPanel2.revalidate();
-        jPanel2.repaint();
-  
-
-        Info.setText("Grafo reiniciado.");
-    }                                          
-
-    private void EliminarParaderoActionPerformed(java.awt.event.ActionEvent evt) {                                                 
-        Info.setText("Haga clic en un paradero para eliminarlo.");
-
-        jPanel2.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                Vertice verticeCercano = obtenerVerticeCercano(evt.getX(), evt.getY());
-                if (verticeCercano != null) {
-                    int id = verticeCercano.getId();
-                    if (grafo.borrarVertice(id)) {
-                        posicionesVertices.remove(id); // Elimina la posición del vértice
-                        actualizarGrafico();
-                        Info.setText("Paradero " + id + " eliminado con éxito.");
-                    } else {
-                        Info.setText("No se pudo eliminar el paradero " + id + ".");
-                    }
-                } else {
-                    Info.setText("No se encontró ningún paradero cerca del clic.");
-                }
-                jPanel2.removeMouseListener(this); // Elimina el listener después de la acción
-            
-            }
-        });
-    }                                                
-
-    private void AñadirParaderoActionPerformed(java.awt.event.ActionEvent evt) {                                               
-
-        modoInsertarVertice = true;
-        Info.setText("Haga clic en el panel para agregar un paradero.");
-        jPanel4.repaint();
-        jPanel2.repaint();
-    }                                              
-
-    private void jPanel2MouseClicked(java.awt.event.MouseEvent evt) {                                     
-        // TODO add your handling code here:
-        if (modoInsertarVertice) {
-            agregarVerticeGraficamente(evt.getX(), evt.getY());
-            modoInsertarVertice = false;
-        } else if (modoInsertarArista) {
-            Vertice v = obtenerVerticeCercano(evt.getX(), evt.getY());
-            if (v != null) {
-                if (verticeSeleccionado1 == null) {
-                    verticeSeleccionado1 = v;
-                    Info.setText("Seleccione el segundo vértice para la arista.");
-                } else {
-                    verticeSeleccionado2 = v;
-                    if (verticeSeleccionado1.getId() == verticeSeleccionado2.getId()) {
-                        Info.setText("No puedes agregar una arista entre un vértice y él mismo. Intente de nuevo");
-                        verticeSeleccionado1 = null;
-                        verticeSeleccionado2 = null;
-                        return; // Detener aquí, no agregar la arista
-                    }
-                    String pesoStr = JOptionPane.showInputDialog(this, "Ingrese el peso de la arista:");
-                    try {
-                        int peso = Integer.parseInt(pesoStr);
-                        grafo.agregarArista(verticeSeleccionado1.getId(), verticeSeleccionado2.getId(), peso);
-                        actualizarGrafico();
-                        Info.setText("Arista agregada con éxito.");
-                    } catch (NumberFormatException e) {
-                        Info.setText("Por favor, ingrese un número válido para el peso.");
-                    }
-                    verticeSeleccionado1 = null;
-                    verticeSeleccionado2 = null;
-                    modoInsertarArista = false;
-                }
-            }
-        }    }                                    
-
-    private void AñadirAvenidaActionPerformed(java.awt.event.ActionEvent evt) {                                              
-        modoInsertarArista = true; // Define un modo para insertar aristas
-        Info.setText("Seleccione el primer vértice para la arista.");
-    }                                             
-
-    private void EliminarAvenidaActionPerformed(java.awt.event.ActionEvent evt) {                                                
-         String input = JOptionPane.showInputDialog(this, "Ingrese los IDs de los paraderos de la avenida a borrar (separados por coma):");
-        try {
-            String[] ids = input.split(",");
-            int id1 = Integer.parseInt(ids[0].trim());
-            int id2 = Integer.parseInt(ids[1].trim());
-            if (grafo.borrarArista(id1, id2)) {
-                actualizarGrafico();
-                Info.setText("Arista entre " + id1 + " y " + id2 + " borrada con éxito.");
-            } else {
-                Info.setText("No se pudo borrar la arista entre " + id1 + " y " + id2 + ".");
-            }
-        } catch (Exception e) {
-            Info.setText("Entrada inválida. Use el formato: id1, id2");
-        }
-    }                                               
-
-    private void CalcularCaminoEficienteActionPerformed(java.awt.event.ActionEvent evt) {                                                        
-        List<Arista> arbolExpansionMinima = grafo.kruskal();
-        if (arbolExpansionMinima == null || arbolExpansionMinima.isEmpty()) {
-            Info.setText("No se pudo generar el árbol de expansión mínima.");
-        } else {
-            actualizarGrafico(arbolExpansionMinima);
-            Info.setText("Árbol de expansión mínima generado con éxito. \nEl costo minimo es: "+grafo.sumPeso);
-            costoMin.setText("S/."+grafo.sumPeso*12+" de Cable para instalar.");
-            grafo.sumPeso=0;
-        }        
-    }                                                       
-private void agregarVerticeGraficamente(int x, int y) {
-    for (Point p : posicionesVertices.values()) {
-        if (Math.abs(p.x - x) <= 20 && Math.abs(p.y - y) <= 20) { // Distancia mínima para evitar solapamiento
-            Info.setText("Ya existe un vértice cerca de esta posición. Intente en otro lugar.");
-            return; // No agrega el vértice
-        }
-    }
-    grafo.agregarVertice(idVertice);
-    posicionesVertices.put(idVertice, new Point(x, y));
-    
-    Graphics g = jPanel4.getGraphics();
-    Graphics g2 = jPanel2.getGraphics();
-    
-    g.setColor(Color.BLACK);
-    g.fillOval(x - 10, y - 10, 20, 20);
-    g.setColor(Color.WHITE);
-    g2.setColor(Color.BLACK);
-    g2.fillOval(x - 10, y - 10, 20, 20);
-    g2.setColor(Color.WHITE);
-    
-    String numeroVertice = String.valueOf(idVertice);
-    int textoX = x - g.getFontMetrics().stringWidth(numeroVertice) / 2;
-    int textoY = y + g.getFontMetrics().getAscent() / 2 - 2;
-    g.drawString(numeroVertice, textoX, textoY);
-    g2.drawString(numeroVertice, textoX, textoY);
-
-        
-    grafo.agregarVertice(idVertice);
-    posicionesVertices.put(idVertice, new Point(x, y));
-    idVertice++;
-    
-    Info.setText("Vértice " + (idVertice - 1) + " agregado.");
-    actualizarGrafico();
-}
-private void actualizarGrafico() {
-        panelGrafico.repaint();
-        panelGrafico2.repaint();
-    }
-private void actualizarGrafico(List<Arista> destacadas) {
-    panelGrafico.setAristasDestacadas(destacadas);
-    panelGrafico2.setAristasDestacadas(destacadas);
-    panelGrafico.repaint();
-    panelGrafico2.repaint();
-}
-
-private Vertice obtenerVerticeCercano(int x, int y) {
-        for (Map.Entry<Integer, Point> entry : posicionesVertices.entrySet()) {
-            Point p = entry.getValue();
-            if (Math.abs(p.x - x) <= 10 && Math.abs(p.y - y) <= 10) {
-                return grafo.getVertice(entry.getKey());
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-       try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ChinesePostmanApp.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-
-        java.awt.EventQueue.invokeLater(() -> {
-            new ChinesePostmanApp().setVisible(true);
-        });
-    }
-    
-    
-
-    // Variables declaration - do not modify                     
-    private javax.swing.JButton AñadirAvenida;
-    private javax.swing.JButton AñadirParadero;
-    private javax.swing.JButton BorrarArista;
-    private javax.swing.JButton BorrarVertice;
-    private javax.swing.JButton CalcularCaminoEficiente;
-    private javax.swing.JButton EliminarAvenida;
-    private javax.swing.JButton EliminarParadero;
-    private javax.swing.JTextArea Info;
-    private javax.swing.JButton InsertarArista;
-    private javax.swing.JButton InsertarVertice;
-    private javax.swing.JButton Kruskal;
-    private javax.swing.JButton Reiniciar;
-    private javax.swing.JButton Reiniciar2;
-    private javax.swing.JButton Salir;
-    private javax.swing.JButton Salir2;
-    private javax.swing.JButton ShowAplicativo;
-    private javax.swing.JButton ShowTeoria;
-    private javax.swing.JLabel costoMin;
-    private javax.swing.JColorChooser jColorChooser1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JScrollPane jScrollPane1;
-    // End of variables declaration                   
-
-
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is always regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel2 = new javax.swing.JPanel();
+        btnTeoria = new javax.swing.JButton();
+        btnAplicacion = new javax.swing.JButton();
+        btnConectar = new javax.swing.JButton();
+        btnResolver = new javax.swing.JButton();
+        btnLimpiar = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
 
-        jPanel2.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel2.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jPanel2MouseClicked(evt);
+        setPreferredSize(new java.awt.Dimension(800, 600));
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                formMouseMoved(evt);
             }
         });
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 688, Short.MAX_VALUE)
+        btnTeoria.setText("Modo Teoría");
+        btnTeoria.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTeoriaActionPerformed(evt);
+            }
+        });
+
+        btnAplicacion.setText("Modo Aplicación");
+
+        btnConectar.setText("Conectar Vértices");
+
+        btnResolver.setText("Resolver Cartero Chino");
+
+        btnLimpiar.setText("Limpiar");
+
+        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setToolTipText("");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 369, Short.MAX_VALUE)
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 525, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -511,60 +90,241 @@ private Vertice obtenerVerticeCercano(int x, int y) {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(45, 45, 45)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(58, Short.MAX_VALUE))
+                .addGap(104, 104, 104)
+                .addComponent(btnTeoria, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnAplicacion)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnConectar)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnResolver)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnLimpiar)
+                .addContainerGap(96, Short.MAX_VALUE))
+            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(298, Short.MAX_VALUE))
+                .addGap(34, 34, 34)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnTeoria)
+                    .addComponent(btnAplicacion)
+                    .addComponent(btnConectar)
+                    .addComponent(btnResolver)
+                    .addComponent(btnLimpiar))
+                .addGap(18, 18, 18)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+    
+    private void initGUI() {
+        setLayout(new BorderLayout());
 
-    private void jPanel2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel2MouseClicked
-        // TODO add your handling code here:
-        if (modoInsertarVertice) {
-            agregarVerticeGraficamente(evt.getX(), evt.getY());
-            modoInsertarVertice = false;
-        } else if (modoInsertarArista) {
-            Vertice v = obtenerVerticeCercano(evt.getX(), evt.getY());
-            if (v != null) {
-                if (verticeSeleccionado1 == null) {
-                    verticeSeleccionado1 = v;
-                    Info.setText("Seleccione el segundo vértice para la arista.");
-                } else {
-                    verticeSeleccionado2 = v;
-                    if (verticeSeleccionado1.getId() == verticeSeleccionado2.getId()) {
-                        Info.setText("No puedes agregar una arista entre un vértice y él mismo. Intente de nuevo");
-                        verticeSeleccionado1 = null;
-                        verticeSeleccionado2 = null;
-                        return; // Detener aquí, no agregar la arista
-                    }
-                    String pesoStr = JOptionPane.showInputDialog(this, "Ingrese el peso de la arista:");
-                    try {
-                        int peso = Integer.parseInt(pesoStr);
-                        grafo.agregarArista(verticeSeleccionado1.getId(), verticeSeleccionado2.getId(), peso);
-                        actualizarGrafico();
-                        Info.setText("Arista agregada con éxito.");
-                    } catch (NumberFormatException e) {
-                        Info.setText("Por favor, ingrese un número válido para el peso.");
-                    }
-                    verticeSeleccionado1 = null;
-                    verticeSeleccionado2 = null;
-                    modoInsertarArista = false;
+        // Panel gráfico (teoría)
+        panelGrafico = new PanelGrafico(grafo, posicionesVertices);
+        panelGrafico.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && !modoConectar) {
+                    agregarVertice(e.getX(), e.getY());
                 }
             }
-    }//GEN-LAST:event_jPanel2MouseClicked
+        });
 
-    private void pack() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        // Panel gráfico con fondo (aplicación)
+        panelGraficoFondo = new PanelGraficoFondo(grafo, posicionesVertices, "src/test/java/Fondo1.png");
+
+        // Panel contenedor para alternar vistas
+        panelContenedor = new JPanel(new CardLayout());
+        panelContenedor.add(panelGrafico, "TEORIA");
+        panelContenedor.add(panelGraficoFondo, "APLICACION");
+
+        // Botones para alternar vistas
+        JButton btnTeoria = new JButton("Modo Teoría");
+        btnTeoria.addActionListener(e -> ((CardLayout) panelContenedor.getLayout()).show(panelContenedor, "TEORIA"));
+
+        JButton btnAplicacion = new JButton("Modo Aplicación");
+        btnAplicacion.addActionListener(e -> ((CardLayout) panelContenedor.getLayout()).show(panelContenedor, "APLICACION"));
+
+        JButton btnConectar = new JButton("Conectar Vértices");
+        btnConectar.addActionListener(e -> modoConectar = !modoConectar);
+        
+        JButton btnResolver = new JButton("Resolver Cartero Chino");
+        btnResolver.addActionListener(e -> resolverProblemaCartero());  // Acción al hacer clic
+        
+        JButton btnLimpiar = new JButton("Limpiar");
+        btnLimpiar.addActionListener(e -> limpiar());
+        
+        // Panel de controles
+        JPanel panelControles = new JPanel();
+        panelControles.add(btnTeoria);
+        panelControles.add(btnAplicacion);
+        panelControles.add(btnConectar);
+        panelControles.add(btnResolver);
+        panelControles.add(btnLimpiar);
+        add(panelControles, BorderLayout.NORTH);
+        add(panelContenedor, BorderLayout.CENTER);
+
+        // Eventos para conectar vértices
+        panelGrafico.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (modoConectar && SwingUtilities.isLeftMouseButton(e)) {
+                    Vertice vertice = buscarVerticeCercano(e.getX(), e.getY());
+                    if (vertice != null) {
+                        if (verticeSeleccionado == null) {
+                            verticeSeleccionado = vertice;
+                        } else {
+                            String pesoStr = JOptionPane.showInputDialog("Ingrese el peso de la arista:");
+                            try {
+                                int peso = Integer.parseInt(pesoStr);
+                                grafo.agregarAristaNoDirigida(verticeSeleccionado.getId(), vertice.getId(), peso);
+                                panelGrafico.repaint();
+                                panelGraficoFondo.repaint();
+                            } catch (NumberFormatException ex) {
+                                JOptionPane.showMessageDialog(null, "Peso inválido.");
+                            }
+                            verticeSeleccionado = null;
+                        }
+                    }
+                }
+            }
+        });
     }
+
+    private void agregarVertice(int x, int y) {
+        if (buscarVerticeCercano(x, y) != null) return;  // Evita duplicados
+        grafo.agregarVertice(idVertice);
+        posicionesVertices.put(idVertice, new Point(x, y));
+        idVertice++;
+        panelGrafico.repaint();
+        panelGraficoFondo.repaint();
+    }
+
+    private Vertice buscarVerticeCercano(int x, int y) {
+        for (Map.Entry<Integer, Point> entry : posicionesVertices.entrySet()) {
+            Point p = entry.getValue();
+            if (Math.abs(p.x - x) <= 15 && Math.abs(p.y - y) <= 15) {
+                return grafo.getVertice(entry.getKey());
+            }
+        }
+        return null;
+    }
+    
+    private void resolverProblemaCartero() {
+        try {
+            if (grafo == null || grafo.getAristas().isEmpty() || !grafo.esConexo()) {
+                JOptionPane.showMessageDialog(this, 
+                    grafo == null || grafo.getAristas().isEmpty() ? 
+                        "¡Grafo vacío!" : "Grafo no conexo", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Paso 1: Clonar el grafo original para no modificarlo directamente
+            Grafo grafoCopia = grafo.clonar();
+
+            // Paso 2: Ejecutar el algoritmo del Cartero Chino (esto modifica la copia)
+            new ChinesePostman().ChinesePostmanTour(grafoCopia);
+
+            // Paso 3: Calcular la suma total de los pesos de las aristas recorridas
+            int sumaPesos = 0;
+            for (Arista a : grafoCopia.getAristas()) {
+                sumaPesos += a.getPeso();
+            }
+
+            // Paso 4: Mostrar el resultado en un JOptionPane
+            JOptionPane.showMessageDialog(
+                this,
+                "Longitud total del recorrido mínimo: " + sumaPesos,
+                "Resultado del Cartero Chino",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+
+            // Paso 5: Resaltar las aristas duplicadas (opcional)
+            Map<Arista, Color> coloresAristas = new HashMap<>();
+            for (Arista a : grafoCopia.getAristas()) {
+                // Comparar con el grafo original para identificar aristas duplicadas
+                boolean esDuplicada = !grafo.getAristas().contains(a);
+                coloresAristas.put(a, esDuplicada ? Color.RED : Color.GREEN);
+            }
+
+            panelGrafico.setAristasDestacadas(grafoCopia.getAristas(), coloresAristas);
+            panelGrafico.repaint();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void limpiar() {
+        int confirmacion = JOptionPane.showConfirmDialog(
+            this, 
+            "¿Está seguro que desea limpiar el grafo actual?\nSe perderán todos los vértices y aristas.",
+            "Confirmar limpieza",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            // Reiniciar el grafo
+            this.grafo = new Grafo();
+
+            // Reiniciar las posiciones de los vértices
+            this.posicionesVertices.clear();
+
+            // Reiniciar el contador de vértices
+            this.idVertice = 1;
+
+            // Resetear estado de conexión
+            this.verticeSeleccionado = null;
+            this.modoConectar = false;
+
+            // Limpiar las aristas destacadas
+            this.panelGrafico.setAristasDestacadas(null,null);
+            this.panelGraficoFondo.setAristasDestacadas(null,null);
+
+            // Actualizar los paneles gráficos
+            this.panelGrafico.repaint();
+            this.panelGraficoFondo.repaint();
+            
+            this.panelGrafico.setGrafo(this.grafo);
+            this.panelGraficoFondo.setGrafo(this.grafo);
+
+            JOptionPane.showMessageDialog(this, "Grafo limpiado correctamente.", "Información", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
+    private void formMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseMoved
+        // TODO add your handling code here:
+    }//GEN-LAST:event_formMouseMoved
+
+    private void btnTeoriaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTeoriaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTeoriaActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel jPanel2;
+    private javax.swing.JButton btnAplicacion;
+    private javax.swing.JButton btnConectar;
+    private javax.swing.JButton btnLimpiar;
+    private javax.swing.JButton btnResolver;
+    private javax.swing.JButton btnTeoria;
+    private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
+    
+    public static void main(String[] args) {
+        Grafo grafoVacio = new Grafo();
+        lanzarGUI(grafoVacio);
+    }
+    
+    private static void lanzarGUI(Grafo grafo) {
+        JFrame frame = new JFrame("Problema del Cartero Chino");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.add(new ChinesePostmanApp(grafo));
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
 }

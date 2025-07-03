@@ -8,17 +8,19 @@ import java.io.File;
 import java.util.Map;
 import java.util.List;
 import graphTDA.*;
+import java.util.HashMap;
 
 public class PanelGraficoFondo extends JPanel {
     private Grafo grafo;
     private Map<Integer, Point> posicionesVertices;
     private List<Arista> aristasDestacadas;
     private Image fondo;
+    private Map<Arista, Color> coloresAristas;
 
     public PanelGraficoFondo(Grafo grafo, Map<Integer, Point> posicionesVertices, String imagePath) {
         this.grafo = grafo;
         this.posicionesVertices = posicionesVertices;
-
+        this.coloresAristas = new HashMap<>();
         try {
             // Cargar la imagen de fondo y escalarla
             Image originalImage = ImageIO.read(new File(imagePath));
@@ -64,13 +66,18 @@ public class PanelGraficoFondo extends JPanel {
             Point p1 = posicionesVertices.get(a.getOrigen());
             Point p2 = posicionesVertices.get(a.getDestino());
             if (p1 != null && p2 != null) {
+                // Determinar el color de la arista
+                Color colorArista;
                 if (aristasDestacadas != null && aristasDestacadas.contains(a)) {
-                    g2d.setColor(Color.RED);
-                    g2d.setStroke(new BasicStroke(3.0f)); // Línea más gruesa para aristas destacadas
+                    // Usar color personalizado si existe, o rojo por defecto
+                    colorArista = coloresAristas.getOrDefault(a, Color.RED);
+                    g2d.setStroke(new BasicStroke(3.0f));
                 } else {
-                    g2d.setColor(Color.BLACK);
+                    colorArista = Color.BLACK;
                     g2d.setStroke(new BasicStroke(2.0f));
                 }
+                
+                g2d.setColor(colorArista);
                 g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
 
                 // Dibujar el peso de la arista con mejor visibilidad
@@ -102,8 +109,14 @@ public class PanelGraficoFondo extends JPanel {
     }
 
     // Método para establecer aristas destacadas
-    public void setAristasDestacadas(List<Arista> destacadas) {
+    public void setAristasDestacadas(List<Arista> destacadas, Map<Arista, Color> colores) {
         this.aristasDestacadas = destacadas;
+        this.coloresAristas = (colores!=null) ? colores:new HashMap<>();
+        repaint();
+    }
+    
+    public void setGrafo(Grafo nuevoGrafo) {
+        this.grafo = nuevoGrafo;
         repaint();
     }
 }
