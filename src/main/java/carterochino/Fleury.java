@@ -22,7 +22,16 @@ public class Fleury {
             return;
         }
 
-        Vertice v = grafo.getVertice(0);
+        if (grafo.getVertice().isEmpty()) {
+            if (areaPasos != null) {
+                areaPasos.append("El grafo no contiene vértices.\n");
+            } else {
+                System.out.println("El grafo no contiene vértices.");
+            }
+            return;
+        }
+
+        Vertice v = grafo.getVertice().get(0); // obtener el primero realmente existente
         Grafo camino = new Grafo();
         camino.agregarVertice(v.getId());
         Grafo untraversed = grafo.clonar();

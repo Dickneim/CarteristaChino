@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package carterochino;
-
 import graphTDA.*;
 import panelgrafico.*;
 import java.awt.*;
@@ -13,6 +12,10 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
+import utils.*;
+import java.util.Set;
+import java.util.HashSet;
+
 
 /**
  *
@@ -231,32 +234,40 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
         try {
             txtPasos.setText(""); // Limpiar el área de texto
 
+            // Redirigir salida estándar a txtPasos
+            PrintStream printStream = new PrintStream(new JTextAreaOutputStream(txtPasos));
+            System.setOut(printStream);
+
             if (grafo == null || grafo.getAristas().isEmpty() || !grafo.esConexo()) {
-                String msg = (grafo == null || grafo.getAristas().isEmpty()) ?
+                String msg = (grafo == null || grafo.getAristas().isEmpty()) ? 
                     "¡Grafo vacío!" : "Grafo no conexo";
-                txtPasos.append("Error: " + msg + "\n");
+                System.out.println("Error: " + msg);
                 JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            txtPasos.append("Iniciando algoritmo del Cartero Chino...\n");
+            System.out.println("Iniciando algoritmo del Cartero Chino...");
 
-            // Clonar grafo
             Grafo grafoCopia = grafo.clonar();
-            txtPasos.append("Clonando el grafo original.\n");
+            System.out.println("Clonando el grafo original.");
 
-            // Ejecutar algoritmo del Cartero Chino
             ChinesePostman solver = new ChinesePostman();
-            solver.setTextArea(txtPasos); // Enviar el JTextArea al algoritmo
+            solver.setTextArea(txtPasos);  // opcional, ya que ahora usamos System.out
             solver.ChinesePostmanTour(grafoCopia);
 
-            // Sumar pesos
             int sumaPesos = 0;
+            Set<String> aristasVisitadas = new HashSet<>();
             for (Arista a : grafoCopia.getAristas()) {
-                sumaPesos += a.getPeso();
+                String clave1 = a.getOrigen() + "-" + a.getDestino();
+                String clave2 = a.getDestino() + "-" + a.getOrigen();
+                if (!aristasVisitadas.contains(clave1) && !aristasVisitadas.contains(clave2)) {
+                    sumaPesos += a.getPeso();
+                    aristasVisitadas.add(clave1);
+                    aristasVisitadas.add(clave2);
+                }
             }
 
-            txtPasos.append("Recorrido completado. Peso total: " + sumaPesos + "\n");
+            System.out.println("Recorrido completado. Peso total: " + sumaPesos);
 
             JOptionPane.showMessageDialog(this,
                 "Longitud total del recorrido mínimo: " + sumaPesos,
@@ -264,7 +275,7 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
                 JOptionPane.INFORMATION_MESSAGE
             );
 
-            // Colorear las aristas duplicadas
+            // Colorear aristas duplicadas
             Map<Arista, Color> coloresAristas = new HashMap<>();
             for (Arista a : grafoCopia.getAristas()) {
                 boolean esDuplicada = !grafo.getAristas().contains(a);
@@ -275,7 +286,7 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
             panelGrafico.repaint();
 
         } catch (Exception ex) {
-            txtPasos.append("Error durante la ejecución: " + ex.getMessage() + "\n");
+            System.out.println("Error durante la ejecución: " + ex.getMessage());
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }

@@ -268,13 +268,13 @@ public class Grafo {
     }
 
     public boolean esEuleriano() {
-        List<Vertice> verticesImpar = new ArrayList<>();
+        if (!esConexo()) return false;
         for (Vertice v : vertices) {
             if (grado(v.getId()) % 2 != 0) {
-                verticesImpar.add(v);
+                return false;
             }
         }
-        return esConexo() && verticesImpar.isEmpty();
+        return true;
     }
     
 }
