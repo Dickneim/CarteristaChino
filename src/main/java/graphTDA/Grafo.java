@@ -125,13 +125,15 @@ public class Grafo {
         return aristas.isEmpty();
     }
     
-    public boolean esPuente(Vertice origen, Vertice destino) {
-        // Clona el grafo y elimina la arista entre los vértices dados
+    public boolean esPuente(Vertice v1, Vertice v2) {
+        // Crear una copia del grafo
         Grafo copia = this.clonar();
-        copia.borrarArista(origen, destino);
 
-        // Verifica si ambos vértices siguen conectados
-        return !copia.estanConectados(origen.getId(), destino.getId());
+        // Eliminar la arista (ambas direcciones)
+        copia.borrarArista(v1, v2);
+
+        // Verificar si siguen conectados
+        return !copia.estanConectados(v1.getId(), v2.getId());
     }
 
     // búsqueda en profundidad (DFS) para verificar si hay un camino entre 

@@ -21,13 +21,13 @@ public class ChinesePostman {
             }
         }
 
-        if (areaPasos != null) {
+        /*f (areaPasos != null) {
             areaPasos.append("Vértices de grado impar: ");
             for (Vertice v : ODD) {
                 areaPasos.append(v.getId() + " ");
             }
             areaPasos.append("\n");
-        }
+        }*/
 
         Grafo grafo_copia;
 
@@ -59,12 +59,12 @@ public class ChinesePostman {
             List<List<List<Integer>>> todosLosMatchings = generarEmparejamientos(idsODD);
             List<List<Integer>> mejorMatching = encontrarMatchingMinimo(todosLosMatchings, distanciasEntreODD);
 
-            if (areaPasos != null) {
+            /*if (areaPasos != null) {
                 areaPasos.append("Emparejamiento óptimo:\n");
                 for (List<Integer> par : mejorMatching) {
                     areaPasos.append(" - " + par.get(0) + " ↔ " + par.get(1) + "\n");
                 }
-            }
+            }*/
 
             for (List<Integer> par : mejorMatching) {
                 int u = par.get(0);
@@ -101,9 +101,9 @@ public class ChinesePostman {
                     if (original != null) {
                         grafo_copia.agregarArista(origen, destino, original.getPeso());
                         grafo_copia.agregarArista(destino, origen, original.getPeso());
-                        if (areaPasos != null) {
+                        /*if (areaPasos != null) {
                             areaPasos.append("Duplicando arista: " + origen + " → " + destino + "\n");
-                        }
+                        }*/
                     }
                 }
             }
@@ -111,12 +111,12 @@ public class ChinesePostman {
             grafo_copia = grafo;
         }
 
-        if (areaPasos != null) {
+        /*if (areaPasos != null) {
             areaPasos.append("Grados finales:\n");
             for (Vertice v : grafo_copia.getVertice()) {
                 areaPasos.append(" - Vertice " + v.getId() + ": grado " + grafo_copia.grado(v.getId()) + "\n");
             }
-        }
+        }*/
 
         // Ejecutar Fleury sobre el grafo modificado
         new Fleury().FleuryAlgorithm(grafo_copia);
