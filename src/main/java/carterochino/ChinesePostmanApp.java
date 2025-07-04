@@ -7,7 +7,6 @@ import graphTDA.*;
 import panelgrafico.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
