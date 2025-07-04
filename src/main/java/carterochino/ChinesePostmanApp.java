@@ -48,6 +48,8 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
         btnResolver = new javax.swing.JButton();
         btnLimpiar = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtPasos = new javax.swing.JTextArea();
 
         setPreferredSize(new java.awt.Dimension(800, 600));
         addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -68,21 +70,34 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
         btnConectar.setText("Conectar Vértices");
 
         btnResolver.setText("Resolver Cartero Chino");
+        btnResolver.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnResolverActionPerformed(evt);
+            }
+        });
 
         btnLimpiar.setText("Limpiar");
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
         jPanel1.setToolTipText("");
 
+        txtPasos.setColumns(20);
+        txtPasos.setRows(5);
+        jScrollPane1.setViewportView(txtPasos);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 525, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 437, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -100,7 +115,7 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
                 .addComponent(btnResolver)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnLimpiar)
-                .addContainerGap(96, Short.MAX_VALUE))
+                .addContainerGap(84, Short.MAX_VALUE))
             .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
@@ -214,38 +229,44 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
     
     private void resolverProblemaCartero() {
         try {
+            txtPasos.setText(""); // Limpiar el área de texto
+
             if (grafo == null || grafo.getAristas().isEmpty() || !grafo.esConexo()) {
-                JOptionPane.showMessageDialog(this, 
-                    grafo == null || grafo.getAristas().isEmpty() ? 
-                        "¡Grafo vacío!" : "Grafo no conexo", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                String msg = (grafo == null || grafo.getAristas().isEmpty()) ?
+                    "¡Grafo vacío!" : "Grafo no conexo";
+                txtPasos.append("Error: " + msg + "\n");
+                JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Paso 1: Clonar el grafo original para no modificarlo directamente
+            txtPasos.append("Iniciando algoritmo del Cartero Chino...\n");
+
+            // Clonar grafo
             Grafo grafoCopia = grafo.clonar();
+            txtPasos.append("Clonando el grafo original.\n");
 
-            // Paso 2: Ejecutar el algoritmo del Cartero Chino (esto modifica la copia)
-            new ChinesePostman().ChinesePostmanTour(grafoCopia);
+            // Ejecutar algoritmo del Cartero Chino
+            ChinesePostman solver = new ChinesePostman();
+            solver.setTextArea(txtPasos); // Enviar el JTextArea al algoritmo
+            solver.ChinesePostmanTour(grafoCopia);
 
-            // Paso 3: Calcular la suma total de los pesos de las aristas recorridas
+            // Sumar pesos
             int sumaPesos = 0;
             for (Arista a : grafoCopia.getAristas()) {
                 sumaPesos += a.getPeso();
             }
 
-            // Paso 4: Mostrar el resultado en un JOptionPane
-            JOptionPane.showMessageDialog(
-                this,
+            txtPasos.append("Recorrido completado. Peso total: " + sumaPesos + "\n");
+
+            JOptionPane.showMessageDialog(this,
                 "Longitud total del recorrido mínimo: " + sumaPesos,
                 "Resultado del Cartero Chino",
                 JOptionPane.INFORMATION_MESSAGE
             );
 
-            // Paso 5: Resaltar las aristas duplicadas (opcional)
+            // Colorear las aristas duplicadas
             Map<Arista, Color> coloresAristas = new HashMap<>();
             for (Arista a : grafoCopia.getAristas()) {
-                // Comparar con el grafo original para identificar aristas duplicadas
                 boolean esDuplicada = !grafo.getAristas().contains(a);
                 coloresAristas.put(a, esDuplicada ? Color.RED : Color.GREEN);
             }
@@ -254,6 +275,7 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
             panelGrafico.repaint();
 
         } catch (Exception ex) {
+            txtPasos.append("Error durante la ejecución: " + ex.getMessage() + "\n");
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -304,6 +326,10 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTeoriaActionPerformed
 
+    private void btnResolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResolverActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnResolverActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAplicacion;
@@ -312,6 +338,8 @@ public class ChinesePostmanApp extends javax.swing.JPanel {
     private javax.swing.JButton btnResolver;
     private javax.swing.JButton btnTeoria;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea txtPasos;
     // End of variables declaration//GEN-END:variables
     
     public static void main(String[] args) {

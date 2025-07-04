@@ -3,14 +3,30 @@ package carterochino;
 
 import graphTDA.*;
 import java.util.*;
+import javax.swing.JTextArea;
 
 public class ChinesePostman {
+    private JTextArea areaPasos = null;
+
+    // Permite asignar un JTextArea externo donde se mostrarán los pasos
+    public void setTextArea(JTextArea areaPasos) {
+        this.areaPasos = areaPasos;
+    }
+
     public void ChinesePostmanTour(Grafo grafo) {
         List<Vertice> ODD = new ArrayList<>();
         for (Vertice v : grafo.getVertice()) {
             if (grafo.grado(v.getId()) % 2 == 1) {
                 ODD.add(v);
             }
+        }
+
+        if (areaPasos != null) {
+            areaPasos.append("Vértices de grado impar: ");
+            for (Vertice v : ODD) {
+                areaPasos.append(v.getId() + " ");
+            }
+            areaPasos.append("\n");
         }
 
         Grafo grafo_copia;
@@ -43,6 +59,13 @@ public class ChinesePostman {
             List<List<List<Integer>>> todosLosMatchings = generarEmparejamientos(idsODD);
             List<List<Integer>> mejorMatching = encontrarMatchingMinimo(todosLosMatchings, distanciasEntreODD);
 
+            if (areaPasos != null) {
+                areaPasos.append("Emparejamiento óptimo:\n");
+                for (List<Integer> par : mejorMatching) {
+                    areaPasos.append(" - " + par.get(0) + " ↔ " + par.get(1) + "\n");
+                }
+            }
+
             for (List<Integer> par : mejorMatching) {
                 int u = par.get(0);
                 int v = par.get(1);
@@ -64,6 +87,13 @@ public class ChinesePostman {
                 }
                 if (!camino.contains(actual)) camino.add(actual);
 
+                if (areaPasos != null) {
+                    areaPasos.append("Camino entre " + u + " y " + v + ": ");
+                    for (int i = camino.size() - 1; i >= 0; i--) {
+                        areaPasos.append(camino.get(i) + (i > 0 ? " → " : "\n"));
+                    }
+                }
+
                 for (int i = camino.size() - 1; i > 0; i--) {
                     int origen = camino.get(i);
                     int destino = camino.get(i - 1);
@@ -71,6 +101,9 @@ public class ChinesePostman {
                     if (original != null) {
                         grafo_copia.agregarArista(origen, destino, original.getPeso());
                         grafo_copia.agregarArista(destino, origen, original.getPeso());
+                        if (areaPasos != null) {
+                            areaPasos.append("Duplicando arista: " + origen + " → " + destino + "\n");
+                        }
                     }
                 }
             }
@@ -78,13 +111,18 @@ public class ChinesePostman {
             grafo_copia = grafo;
         }
 
-        for (Vertice v : grafo_copia.getVertice()) {
-            System.out.println("Grado final del vertice " + v.getId() + ": " + grafo_copia.grado(v.getId()));
+        if (areaPasos != null) {
+            areaPasos.append("Grados finales:\n");
+            for (Vertice v : grafo_copia.getVertice()) {
+                areaPasos.append(" - Vertice " + v.getId() + ": grado " + grafo_copia.grado(v.getId()) + "\n");
+            }
         }
 
+        // Ejecutar Fleury sobre el grafo modificado
         new Fleury().FleuryAlgorithm(grafo_copia);
     }
 
+    // Genera todos los emparejamientos posibles entre vértices impares (matching perfecto)
     public List<List<List<Integer>>> generarEmparejamientos(List<Integer> vertices) {
         List<List<List<Integer>>> resultados = new ArrayList<>();
         if (vertices.size() == 0) {
@@ -109,6 +147,7 @@ public class ChinesePostman {
         return resultados;
     }
 
+    // Encuentra el emparejamiento con menor costo total entre los vértices impares
     public List<List<Integer>> encontrarMatchingMinimo(List<List<List<Integer>>> matchings, Map<Integer, Map<Integer, Integer>> distancias) {
         int costoMinimo = Integer.MAX_VALUE;
         List<List<Integer>> mejorMatching = null;

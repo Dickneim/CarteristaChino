@@ -3,11 +3,25 @@ package carterochino;
 
 import java.util.*;
 import graphTDA.*;
+import javax.swing.JTextArea;
 
 public class Fleury {
+    private JTextArea areaPasos = null;
+
+    public void setTextArea(JTextArea areaPasos) {
+        this.areaPasos = areaPasos;
+
+    }
+    
     public void FleuryAlgorithm(Grafo grafo) {
+        
+        
         if (grafo.esUnidireccional()) {
-            System.out.println("El grafo es unidireccional, y el algoritmo de Fleury requiere un grafo no dirigido.");
+            if (areaPasos != null) {
+                areaPasos.append("\nEl grafo es unidireccional, y el algoritmo de Fleury requiere un grafo no dirigido.\n");
+            } else {
+                System.out.println("El grafo es unidireccional, y el algoritmo de Fleury requiere un grafo no dirigido.");
+            }
             return;
         }
 
@@ -22,7 +36,11 @@ public class Fleury {
                     .toList();
 
             if (adyacentes.isEmpty()) {
-                System.out.println("Error: el vertice " + v.getId() + " no tiene aristas adyacentes.");
+                if (areaPasos != null) {
+                    areaPasos.append("Error: el vertice " + v.getId() + " no tiene aristas adyacentes.\n");
+                } else {
+                    System.out.println("Error: el vertice " + v.getId() + " no tiene aristas adyacentes.\n");
+                }
                 return;
             }
 
@@ -49,14 +67,26 @@ public class Fleury {
             Vertice u = grafo.getVertice((elegida.getOrigen() == v.getId()) ? elegida.getDestino() : elegida.getOrigen());
 
             camino.agregarArista(v.getId(), u.getId(), elegida.getPeso());
-            System.out.println(v.getId() + " -> " + u.getId());
+            if (areaPasos != null) {
+                areaPasos.append(v.getId() + " -> " + u.getId());
+            } else {
+                System.out.println(v.getId() + " -> " + u.getId());
+            }
 
-            System.out.println("Eliminando arista: " + v.getId() + " -> " + u.getId());
+            if (areaPasos != null) {
+                areaPasos.append("Eliminando arista: " + v.getId() + " -> " + u.getId());
+            } else {
+                System.out.println("Eliminando arista: " + v.getId() + " -> " + u.getId());
+            }
             untraversed.borrarAristaDirigida(new Arista(v.getId(), u.getId(), 0));
 
             v = u;
         }
 
-        System.out.println("Se completo el algoritmo de Fleury para el grafo.");
+        if (areaPasos != null) {
+            areaPasos.append("Se completo el algoritmo de Fleury para el grafo.");
+        } else {
+            System.out.println("Se completo el algoritmo de Fleury para el grafo.");
+        }
     }
 }
